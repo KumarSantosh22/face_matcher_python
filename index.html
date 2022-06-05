@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Face Recognition</title>
+
+</head>
+
+<body>
+    <div>
+        <input name="inputFile1" id="inputFile1" type="file" class="file-upload" onchange="fileChange1(event)">
+    </div>
+
+    <img style="width: 300px; height: 300px;" id="output1" src="" />
+
+    <div>
+        <input name="inputFile2" id="inputFile2" type="file" class="file-upload" onchange="fileChange2(event)">
+    </div>
+
+    <img style="width: 300px; height: 300px;" id="output2" src="" />
+
+    <div>
+        <button type="button" onclick="compare()">Match</button>
+    </div>
+    <h2 id="match-result"></h2>
+    <script>
+        model = { fileData1: '', fileName1: '', fileType1: '', fileData1: '', fileName2: '', fileType2: '' }
+
+        async function fileChange1(event) {
+            console.log(event);
+            const file = event.target.files[0];
+            if (file) {
+                console.log(file);
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                // on successfully load
+                reader.onload = () => {
+                    model.fileData1 = reader.result;
+                    // console.log(model.fileData1)
+                    document.getElementById('output1').src = model.fileData1;
+                }
+                // on error
+                reader.onerror = function (error) {
+                    console.log('Error: ', error);
+                };
+                // model.fileData1 = this.getBase64(file);
+                model.fileName1 = file.name;
+                let fType = model.fileName1.split('.').map(x => x.trim());
+                model.fileType1 = fType[fType.length - 1];
+            }
+        }
+
+        async function fileChange2(event) {
+            console.log(event);
+            const file = event.target.files[0];
+            if (file) {
+                console.log(file);
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                // on successfully load
+                reader.onload = () => {
+                    model.fileData2 = reader.result;
+                    // console.log(model.fileData2)
+                    document.getElementById('output2').src = model.fileData2;
+                }
+                // on error
+                reader.onerror = function (error) {
+                    console.log('Error: ', error);
+                };
+                model.fileName2 = file.name;
+                let fType = model.fileName2.split('.').map(x => x.trim());
+                model.fileType2 = fType[fType.length - 1];
+            }
+        }
+
+        function compare() {
+            console.log('comparing....');
+            apiUrl = 'http://localhost:5000/api/v1/facematch';
+            const result = document.getElementById('match-result');
+            console.log(result);
+            result.innerText = 'Please wait patiently while we calculate result...';
+
+            // calling api
+            let options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8;'
+                },
+                body: JSON.stringify(model)
+            }
+            let fetchRes = fetch(apiUrl, options);
+            fetchRes.then(res =>
+                res.json()).then(d => {
+                    console.log(d)
+                    // print response 
+                    let txt = "";
+                    for (let x in d) {
+                        txt += x + ":";
+                        txt += d[x] + ";  ";
+                    };
+                    result.innerText = txt;
+                })
+        }
+
+    </script>
+</body>
+
+</html>
